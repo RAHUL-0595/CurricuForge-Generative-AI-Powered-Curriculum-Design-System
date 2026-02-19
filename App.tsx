@@ -95,10 +95,10 @@ function App() {
                 className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
                   activeTab === tab.id 
                   ? 'bg-white text-[#3F51B5] shadow-md ring-1 ring-slate-200' 
-                  : 'text-slate-500 hover:text-[#3F51B5] hover:bg-white/50'
+                  : 'text-slate-500 hover:text-[#FFB7B2] hover:bg-white/50'
                 }`}
               >
-                <i className={`fas ${tab.icon} ${activeTab === tab.id ? 'text-[#00E5FF]' : 'opacity-60'}`}></i>
+                <i className={`fas ${tab.icon} ${activeTab === tab.id ? 'text-[#FFB7B2]' : 'opacity-60'}`}></i>
                 <span className="hidden sm:inline">{tab.label}</span>
               </button>
             ))}
@@ -114,7 +114,7 @@ function App() {
                 Industry Standard Engineering
               </span>
               <h2 className="text-5xl md:text-6xl font-[800] text-[#263238] mb-6 tracking-tight">
-                Next-Gen <span className="text-[#3F51B5] relative">Learning Architect<span className="absolute -bottom-1 left-0 w-full h-1 bg-[#00E5FF] opacity-30 rounded-full"></span></span>
+                Next-Gen <span className="text-[#3F51B5] relative">Learning Architect<span className="absolute -bottom-1 left-0 w-full h-1 bg-[#FFB7B2] opacity-30 rounded-full"></span></span>
               </h2>
               
               {/* Flash-Lite Quick Lookup */}
@@ -123,11 +123,11 @@ function App() {
                    <input 
                     type="text" 
                     placeholder="Quick terminology lookup (Flash-Lite powered)..." 
-                    className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-3 text-sm font-medium focus:ring-2 focus:ring-[#00E5FF]/20 focus:border-[#00E5FF] outline-none transition-all pr-12"
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-3 text-sm font-medium focus:ring-2 focus:ring-[#FFB7B2]/20 focus:border-[#FFB7B2] outline-none transition-all pr-12"
                     value={quickSearch}
                     onChange={(e) => setQuickSearch(e.target.value)}
                    />
-                   <button className="absolute right-2 top-1/2 -translate-y-1/2 text-[#3F51B5] hover:text-[#00E5FF] transition-colors p-2">
+                   <button className="absolute right-2 top-1/2 -translate-y-1/2 text-[#3F51B5] hover:text-[#FFB7B2] transition-colors p-2">
                      {isQuickLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-bolt-lightning"></i>}
                    </button>
                 </form>
@@ -158,7 +158,7 @@ function App() {
                   <div className="absolute top-6 right-6 z-10 flex gap-3">
                     <button 
                       onClick={() => handleTTS(`${curriculum.title}. ${curriculum.description}`)}
-                      className="glow-button bg-white text-[#3F51B5] p-4 rounded-2xl shadow-xl hover:shadow-[#00E5FF]/20 transition-all ring-1 ring-slate-100"
+                      className="glow-button bg-white text-[#3F51B5] p-4 rounded-2xl shadow-xl hover:shadow-[#FFB7B2]/20 transition-all ring-1 ring-slate-100"
                     >
                       <i className="fas fa-volume-high"></i>
                     </button>
@@ -183,7 +183,7 @@ function App() {
           <div className="flex items-center gap-4">
             <div className="gradient-header p-3 rounded-2xl"><i className="fas fa-graduation-cap text-xl"></i></div>
             <div>
-              <h1 className="text-2xl font-extrabold tracking-tight">Curricu<span className="text-[#00E5FF]">Forge</span></h1>
+              <h1 className="text-2xl font-extrabold tracking-tight">Curricu<span className="text-[#FFB7B2]">Forge</span></h1>
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Intelligent Academic Labs</p>
             </div>
           </div>
@@ -201,7 +201,7 @@ const LoadingState = () => (
     <div className="relative">
       <div className="w-24 h-24 border-4 border-slate-100 border-t-[#3F51B5] rounded-full animate-spin"></div>
       <div className="absolute inset-0 flex items-center justify-center">
-        <i className="fas fa-microchip text-[#00E5FF] text-3xl animate-pulse"></i>
+        <i className="fas fa-microchip text-[#FFB7B2] text-3xl animate-pulse"></i>
       </div>
     </div>
     <div className="text-center space-y-2">

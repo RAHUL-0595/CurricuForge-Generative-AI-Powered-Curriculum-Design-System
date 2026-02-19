@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Curriculum, Module, Topic } from '../types';
 
@@ -73,7 +72,7 @@ const ModuleCard: React.FC<{ module: Module, index: number }> = ({ module: initi
       <div className="p-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
           <div className="lg:col-span-2 space-y-8">
-            <h4 className="text-xs font-black text-[#3F51B5] uppercase tracking-[0.2em] flex items-center gap-2">
+            <h4 className="text-xs font-black text-[#FFB7B2] uppercase tracking-[0.2em] flex items-center gap-2">
               <i className="fas fa-layer-group"></i> Unit Progression
             </h4>
             <div className="space-y-6">
@@ -86,24 +85,24 @@ const ModuleCard: React.FC<{ module: Module, index: number }> = ({ module: initi
                   onDragEnd={handleDragEnd}
                   className={`bg-slate-50/50 p-6 rounded-2xl border transition-all group flex gap-5 ${
                     draggingIdx === tidx 
-                      ? 'bg-indigo-50 border-[#3F51B5] border-dashed scale-[0.99] shadow-inner' 
-                      : 'border-slate-100 hover:border-[#3F51B5]/30 hover:bg-white hover:shadow-xl hover:shadow-indigo-500/5'
+                      ? 'bg-red-50 border-[#FFB7B2] border-dashed scale-[0.99] shadow-inner' 
+                      : 'border-slate-100 hover:border-[#FFB7B2]/30 hover:bg-white hover:shadow-xl hover:shadow-[#FFB7B2]/5'
                   }`}
                 >
-                  <div className="flex flex-col items-center justify-start cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-[#3F51B5]/50 mt-1 print:hidden">
+                  <div className="flex flex-col items-center justify-start cursor-grab active:cursor-grabbing text-slate-300 group-hover:text-[#FFB7B2]/50 mt-1 print:hidden">
                     <i className="fas fa-grip-vertical"></i>
                   </div>
 
                   <div className="flex-1">
                     <div className="flex justify-between items-start mb-3">
                       <h5 className="text-lg font-extrabold text-[#263238]">{tidx + 1}. {topic.title}</h5>
-                      <div className="bg-indigo-50 px-2.5 py-1 rounded-lg text-[10px] font-black text-[#3F51B5] uppercase tracking-wider flex items-center gap-1.5">
+                      <div className="bg-red-50 px-2.5 py-1 rounded-lg text-[10px] font-black text-[#FFB7B2] uppercase tracking-wider flex items-center gap-1.5">
                         <i className="far fa-clock"></i> {topic.duration}
                       </div>
                     </div>
                     
                     <textarea 
-                      className="w-full text-sm text-slate-500 font-medium mb-4 bg-transparent border-none focus:ring-1 focus:ring-indigo-100 rounded p-1 resize-none"
+                      className="w-full text-sm text-slate-500 font-medium mb-4 bg-transparent border-none focus:ring-1 focus:ring-red-100 rounded p-1 resize-none"
                       value={topic.description}
                       onChange={(e) => updateTopicDescription(tidx, e.target.value)}
                       rows={2}
@@ -111,7 +110,7 @@ const ModuleCard: React.FC<{ module: Module, index: number }> = ({ module: initi
 
                     <div className="flex flex-wrap gap-2.5 items-center">
                       {topic.keyPoints.map((point, pidx) => (
-                        <div key={pidx} className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-1.5 group/point hover:border-[#3F51B5] transition-all shadow-sm">
+                        <div key={pidx} className="flex items-center bg-white border border-slate-200 rounded-xl px-3 py-1.5 group/point hover:border-[#FFB7B2] transition-all shadow-sm">
                           <input 
                             className="text-[11px] font-bold text-[#263238] border-none bg-transparent focus:ring-0 w-auto min-w-[80px]"
                             value={point}
@@ -128,7 +127,7 @@ const ModuleCard: React.FC<{ module: Module, index: number }> = ({ module: initi
                       ))}
                       <button 
                         onClick={() => addKeyPoint(tidx)}
-                        className="text-[11px] font-black text-[#3F51B5] hover:text-[#00E5FF] p-2 flex items-center gap-1.5 transition-colors print:hidden"
+                        className="text-[11px] font-black text-[#FFB7B2] hover:text-[#FFB7B2]/80 p-2 flex items-center gap-1.5 transition-colors print:hidden"
                       >
                         <i className="fas fa-circle-plus"></i> Add Spec
                       </button>
@@ -142,15 +141,15 @@ const ModuleCard: React.FC<{ module: Module, index: number }> = ({ module: initi
           <div className="space-y-8">
             <div className="bg-[#F9FAFC] p-8 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group/outcomes">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover/outcomes:scale-125 transition-transform">
-                <i className="fas fa-bullseye text-6xl text-[#3F51B5]"></i>
+                <i className="fas fa-bullseye text-6xl text-[#FFB7B2]"></i>
               </div>
-              <h4 className="text-xs font-black text-[#3F51B5] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
+              <h4 className="text-xs font-black text-[#FFB7B2] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
                 Learning Milestones
               </h4>
               <ul className="space-y-4">
                 {module.learningOutcomes.map((outcome) => (
                   <li key={outcome.id} className="text-sm font-semibold text-slate-600 flex gap-4">
-                    <span className="flex-shrink-0 mt-1 text-[#00E5FF] text-[10px]"><i className="fas fa-circle-check"></i></span>
+                    <span className="flex-shrink-0 mt-1 text-[#FFB7B2] text-[10px]"><i className="fas fa-circle-check"></i></span>
                     {outcome.description}
                   </li>
                 ))}
@@ -177,11 +176,11 @@ export const CurriculumDisplay: React.FC<Props> = ({ curriculum }) => {
           <div className="flex flex-col gap-3 min-w-[240px] print:hidden">
             <div className="bg-white px-5 py-3 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Target Cohort</span>
-              <span className="text-sm font-bold text-[#3F51B5]">{curriculum.targetAudience}</span>
+              <span className="text-sm font-bold text-[#FFB7B2]">{curriculum.targetAudience}</span>
             </div>
             <div className="bg-white px-5 py-3 rounded-2xl flex items-center justify-between border border-slate-100 shadow-sm">
               <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Commitment</span>
-              <span className="text-sm font-bold text-[#3F51B5]">{curriculum.totalDuration}</span>
+              <span className="text-sm font-bold text-[#FFB7B2]">{curriculum.totalDuration}</span>
             </div>
           </div>
         </div>
@@ -201,15 +200,15 @@ export const CurriculumDisplay: React.FC<Props> = ({ curriculum }) => {
 
           <div className="md:col-span-2 bg-[#263238] p-8 rounded-[2rem] text-white shadow-xl overflow-hidden relative">
              <div className="absolute top-0 right-0 p-6 opacity-10">
-                <i className="fas fa-brain text-8xl text-[#00E5FF]"></i>
+                <i className="fas fa-brain text-8xl text-[#FFB7B2]"></i>
              </div>
-            <h4 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-[#00E5FF]">
+            <h4 className="text-xl font-extrabold mb-6 flex items-center gap-3 text-[#FFB7B2]">
               <i className="fas fa-microchip"></i> Architectural Enhancements
             </h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-10">
               {curriculum.academicOptimizationTips.map((tip, i) => (
                 <div key={i} className="flex gap-4 items-start bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10">
-                  <span className="text-[#00E5FF] font-black text-xs pt-0.5">0{i+1}</span>
+                  <span className="text-[#FFB7B2] font-black text-xs pt-0.5">0{i+1}</span>
                   <p className="text-sm text-slate-300 font-medium leading-relaxed">{tip}</p>
                 </div>
               ))}
@@ -221,7 +220,7 @@ export const CurriculumDisplay: React.FC<Props> = ({ curriculum }) => {
       <div className="space-y-10">
         <div className="flex items-center justify-between px-4">
           <h3 className="text-3xl font-black text-[#263238] flex items-center gap-4">
-            <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-slate-100 flex items-center justify-center text-[#3F51B5]">
+            <div className="w-12 h-12 bg-white rounded-2xl shadow-md border border-slate-100 flex items-center justify-center text-[#FFB7B2]">
               <i className="fas fa-stream"></i>
             </div>
             Educational Blueprint
@@ -240,7 +239,7 @@ export const CurriculumDisplay: React.FC<Props> = ({ curriculum }) => {
           onClick={() => window.print()}
           className="glow-button bg-[#263238] text-white px-10 py-5 rounded-[1.5rem] font-black text-sm uppercase tracking-widest shadow-2xl flex items-center gap-3"
         >
-          <i className="fas fa-file-pdf text-lg text-[#00E5FF]"></i>
+          <i className="fas fa-file-pdf text-lg text-[#FFB7B2]"></i>
           Generate System Export
         </button>
       </div>
