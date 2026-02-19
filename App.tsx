@@ -1,18 +1,20 @@
-
 import React, { useState } from 'react';
 import { CurriculumForm } from './components/CurriculumForm';
 import { CurriculumDisplay } from './components/CurriculumDisplay';
 import { ImageForge } from './components/ImageForge';
 import { LiveForge } from './components/LiveForge';
 import { Chatbot } from './components/Chatbot';
-import { generateCurriculum, generateSpeech } from './services/geminiService';
+import { generateCurriculum, generateSpeech, fastChat } from './services/geminiService';
 import { Curriculum, GenerationParams } from './types';
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'forge' | 'visual' | 'live'>('forge');
+  const [activeTab, setActiveTab] = useState<'forge' | 'visual' | 'live' | 'chat'>('forge');
   const [curriculum, setCurriculum] = React.useState<Curriculum | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
+  const [quickSearch, setQuickSearch] = useState('');
+  const [quickResult, setQuickResult] = useState('');
+  const [isQuickLoading, setIsQuickLoading] = useState(false);
 
   const handleGenerate = async (params: GenerationParams) => {
     setIsLoading(true);
@@ -24,17 +26,29 @@ function App() {
         document.getElementById('curriculum-results')?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
     } catch (err) {
-      setError("Failed to generate curriculum. Please check your API key and network connection.");
+      setError("Strategic synthesis failed. Please verify connectivity or credentials.");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleQuickLookup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quickSearch.trim()) return;
+    setIsQuickLoading(true);
+    try {
+      const res = await fastChat(`Define this academic/industry term briefly: ${quickSearch}`);
+      setQuickResult(res);
+    } catch (err) {
+      setQuickResult("Lookup failed.");
+    } finally {
+      setIsQuickLoading(false);
     }
   };
 
   const handleTTS = async (text: string) => {
     try {
       const base64 = await generateSpeech(text);
-      const audio = new Audio(`data:audio/pcm;base64,${base64}`);
-      // Note: Browsers usually need a user gesture to play, but here it's triggered by button click
       const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
       const binary = atob(base64);
       const bytes = new Uint8Array(binary.length);
@@ -53,97 +67,128 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-lg text-white">
-              <i className="fas fa-graduation-cap text-xl"></i>
+    <div className="min-h-screen bg-[#B39DDB] flex flex-col">
+      <header className="bg-glass border-b border-slate-200 sticky top-0 z-40 transition-all duration-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="gradient-header p-3 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
+              <i className="fas fa-graduation-cap text-2xl"></i>
             </div>
             <div>
-              <h1 className="text-xl font-black text-slate-900 tracking-tight">CURRICU<span className="text-indigo-600">FORGE</span></h1>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Generative AI Design System</p>
+              <h1 className="text-2xl font-extrabold text-[#263238] tracking-tight">
+                Curricu<span className="text-[#3F51B5]">Forge</span>
+              </h1>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] leading-none">Enterprise Academic Architect</p>
             </div>
           </div>
-          <nav className="flex items-center gap-1 md:gap-4 bg-slate-100 p-1 rounded-xl">
-            <button 
-              onClick={() => setActiveTab('forge')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'forge' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Curriculum Forge
-            </button>
-            <button 
-              onClick={() => setActiveTab('visual')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'visual' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Visual Forge
-            </button>
-            <button 
-              onClick={() => setActiveTab('live')}
-              className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${activeTab === 'live' ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-            >
-              Live Sync
-            </button>
+          
+          <nav className="flex items-center gap-2 bg-slate-100 p-1.5 rounded-2xl border border-slate-200">
+            {[
+              { id: 'forge', label: 'Architect', icon: 'fa-pen-ruler' },
+              { id: 'visual', label: 'Visuals', icon: 'fa-wand-magic-sparkles' },
+              { id: 'live', label: 'Voice', icon: 'fa-microphone-lines' },
+              { id: 'chat', label: 'Advisor', icon: 'fa-brain-circuit' }
+            ].map(tab => (
+              <button 
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+                  activeTab === tab.id 
+                  ? 'bg-white text-[#3F51B5] shadow-md ring-1 ring-slate-200' 
+                  : 'text-slate-500 hover:text-[#3F51B5] hover:bg-white/50'
+                }`}
+              >
+                <i className={`fas ${tab.icon} ${activeTab === tab.id ? 'text-[#00E5FF]' : 'opacity-60'}`}></i>
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-16">
         {activeTab === 'forge' && (
-          <>
-            <div className="text-center mb-12">
-              <h2 className="text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
-                Architect Your <span className="text-indigo-600">Learning Path</span>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="text-center mb-16">
+              <span className="bg-[#3F51B5]/10 text-[#3F51B5] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 inline-block ring-1 ring-[#3F51B5]/20">
+                Industry Standard Engineering
+              </span>
+              <h2 className="text-5xl md:text-6xl font-[800] text-[#263238] mb-6 tracking-tight">
+                Next-Gen <span className="text-[#3F51B5] relative">Learning Architect<span className="absolute -bottom-1 left-0 w-full h-1 bg-[#00E5FF] opacity-30 rounded-full"></span></span>
               </h2>
-              <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                Powered by Gemini 3 Pro with Search Grounding and Deep Thinking.
-              </p>
+              
+              {/* Flash-Lite Quick Lookup */}
+              <div className="max-w-xl mx-auto mt-8">
+                <form onSubmit={handleQuickLookup} className="relative group">
+                   <input 
+                    type="text" 
+                    placeholder="Quick terminology lookup (Flash-Lite powered)..." 
+                    className="w-full bg-white border border-slate-200 rounded-2xl px-6 py-3 text-sm font-medium focus:ring-2 focus:ring-[#00E5FF]/20 focus:border-[#00E5FF] outline-none transition-all pr-12"
+                    value={quickSearch}
+                    onChange={(e) => setQuickSearch(e.target.value)}
+                   />
+                   <button className="absolute right-2 top-1/2 -translate-y-1/2 text-[#3F51B5] hover:text-[#00E5FF] transition-colors p-2">
+                     {isQuickLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-bolt-lightning"></i>}
+                   </button>
+                </form>
+                {quickResult && (
+                  <div className="mt-3 p-4 bg-indigo-50 border border-indigo-100 rounded-2xl text-left animate-in slide-in-from-top-2">
+                    <p className="text-xs font-bold text-[#3F51B5] uppercase mb-1">Instant Synthesis</p>
+                    <p className="text-xs font-medium text-slate-600 leading-relaxed">{quickResult}</p>
+                    <button onClick={() => setQuickResult('')} className="text-[10px] font-bold text-slate-400 mt-2 hover:text-red-400">Clear Result</button>
+                  </div>
+                )}
+              </div>
             </div>
-            <div className="max-w-4xl mx-auto mb-20">
+            
+            <div className="max-w-4xl mx-auto mb-24">
               <CurriculumForm onSubmit={handleGenerate} isLoading={isLoading} />
               {error && (
-                <div className="mt-6 p-4 bg-red-50 border border-red-100 text-red-700 rounded-xl flex items-center gap-3">
-                  <i className="fas fa-exclamation-circle"></i>
-                  <span className="text-sm font-medium">{error}</span>
+                <div className="mt-8 p-5 bg-red-50 border border-red-100 text-red-800 rounded-2xl flex items-center gap-4 shadow-sm animate-in zoom-in-95">
+                  <div className="bg-red-100 p-2 rounded-lg"><i className="fas fa-circle-exclamation text-red-600"></i></div>
+                  <span className="text-sm font-semibold">{error}</span>
                 </div>
               )}
             </div>
+
             <div id="curriculum-results">
               {isLoading && <LoadingState />}
               {curriculum && (
-                <div className="relative">
-                  <div className="absolute top-4 right-4 z-10">
+                <div className="relative group">
+                  <div className="absolute top-6 right-6 z-10 flex gap-3">
                     <button 
                       onClick={() => handleTTS(`${curriculum.title}. ${curriculum.description}`)}
-                      className="bg-indigo-600 text-white p-3 rounded-full shadow-lg hover:bg-indigo-700 transition-all"
-                      title="Listen to summary"
+                      className="glow-button bg-white text-[#3F51B5] p-4 rounded-2xl shadow-xl hover:shadow-[#00E5FF]/20 transition-all ring-1 ring-slate-100"
                     >
-                      <i className="fas fa-volume-up"></i>
+                      <i className="fas fa-volume-high"></i>
                     </button>
                   </div>
                   <CurriculumDisplay curriculum={curriculum} />
                 </div>
               )}
             </div>
-          </>
+          </div>
         )}
 
         {activeTab === 'visual' && <ImageForge />}
         {activeTab === 'live' && <LiveForge />}
+        {activeTab === 'chat' && <Chatbot embedded={true} />}
       </main>
 
-      <Chatbot />
+      {/* Floating helpbot is hidden when the main chat tab is active to avoid redundancy */}
+      {activeTab !== 'chat' && <Chatbot />}
       
-      <footer className="bg-slate-900 text-white py-12 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-8">
-          <div className="flex items-center gap-3">
-            <div className="bg-indigo-600 p-2 rounded-lg">
-              <i className="fas fa-graduation-cap text-xl"></i>
+      <footer className="bg-[#263238] text-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-12">
+          <div className="flex items-center gap-4">
+            <div className="gradient-header p-3 rounded-2xl"><i className="fas fa-graduation-cap text-xl"></i></div>
+            <div>
+              <h1 className="text-2xl font-extrabold tracking-tight">Curricu<span className="text-[#00E5FF]">Forge</span></h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Intelligent Academic Labs</p>
             </div>
-            <h1 className="text-xl font-black tracking-tight">CURRICU<span className="text-indigo-400">FORGE</span></h1>
           </div>
-          <div className="text-slate-500 text-sm">
-            &copy; 2024 CurricuForge. Powered by Gemini 3 & 2.5 Series.
+          <div className="text-slate-500 text-xs font-bold uppercase tracking-widest text-right leading-relaxed">
+            exynos@2026Currcuforge TEAM PVT LIMITED
           </div>
         </div>
       </footer>
@@ -152,16 +197,16 @@ function App() {
 }
 
 const LoadingState = () => (
-  <div className="flex flex-col items-center justify-center py-20 space-y-6">
+  <div className="flex flex-col items-center justify-center py-32 space-y-8 animate-in fade-in duration-1000">
     <div className="relative">
-      <div className="w-20 h-20 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+      <div className="w-24 h-24 border-4 border-slate-100 border-t-[#3F51B5] rounded-full animate-spin"></div>
       <div className="absolute inset-0 flex items-center justify-center">
-        <i className="fas fa-brain text-indigo-600 text-2xl animate-pulse"></i>
+        <i className="fas fa-microchip text-[#00E5FF] text-3xl animate-pulse"></i>
       </div>
     </div>
-    <div className="text-center">
-      <p className="text-xl font-bold text-slate-800">Synthesizing Educational Content...</p>
-      <p className="text-slate-500 text-sm">Deep Thinking enabled. Grounding with Google Search.</p>
+    <div className="text-center space-y-2">
+      <p className="text-2xl font-extrabold text-[#263238]">Synthesizing Academic Framework...</p>
+      <p className="text-slate-500 font-medium">Deep pedagogical analysis and search grounding in progress.</p>
     </div>
   </div>
 );

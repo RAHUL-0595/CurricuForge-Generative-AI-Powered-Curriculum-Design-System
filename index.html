@@ -1,17 +1,45 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CurricuForge - AI Curriculum Designer</title>
+    <title>CurricuForge - Professional AI Curriculum Architect</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #B39DDB;
+            color: #263238;
+        }
+        .bg-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+        .gradient-header {
+            background: linear-gradient(135deg, #3F51B5 0%, #00E5FF 100%);
+        }
+        .glow-button {
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+            transform: translateY(-1px);
+        }
+        .frosted-card {
+            background: #FFFFFF;
+            border: 1px solid rgba(63, 81, 181, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .frosted-card:hover {
+            box-shadow: 0 10px 30px -5px rgba(63, 81, 181, 0.1);
+        }
+        .drag-ghost {
+            opacity: 0.5;
+            background: #eef2ff !important;
+            border: 2px dashed #3F51B5 !important;
         }
     </style>
 <script type="importmap">

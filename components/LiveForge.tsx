@@ -10,6 +10,7 @@ export const LiveForge: React.FC = () => {
   const outputAudioContextRef = useRef<AudioContext | null>(null);
   const nextStartTimeRef = useRef(0);
   const sourcesRef = useRef(new Set<AudioBufferSourceNode>());
+  const streamRef = useRef<MediaStream | null>(null);
 
   const decode = (base64: string) => {
     const binaryString = atob(base64);
@@ -46,110 +47,167 @@ export const LiveForge: React.FC = () => {
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
     outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
     
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    
-    const sessionPromise = ai.live.connect({
-      model: 'gemini-2.5-flash-native-audio-preview-12-2025',
-      callbacks: {
-        onopen: () => {
-          const source = audioContextRef.current!.createMediaStreamSource(stream);
-          const scriptProcessor = audioContextRef.current!.createScriptProcessor(4096, 1, 1);
-          scriptProcessor.onaudioprocess = (e) => {
-            const inputData = e.inputBuffer.getChannelData(0);
-            const pcmBlob = createBlob(inputData);
-            sessionPromise.then(s => s.sendRealtimeInput({ media: pcmBlob }));
-          };
-          source.connect(scriptProcessor);
-          scriptProcessor.connect(audioContextRef.current!.destination);
-          setIsActive(true);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const sessionPromise = ai.live.connect({
+        model: 'gemini-2.5-flash-native-audio-preview-12-2025',
+        callbacks: {
+          onopen: () => {
+            const source = audioContextRef.current!.createMediaStreamSource(stream);
+            const scriptProcessor = audioContextRef.current!.createScriptProcessor(4096, 1, 1);
+            scriptProcessor.onaudioprocess = (e) => {
+              const inputData = e.inputBuffer.getChannelData(0);
+              const pcmBlob = createBlob(inputData);
+              sessionPromise.then(s => s.sendRealtimeInput({ media: pcmBlob }));
+            };
+            source.connect(scriptProcessor);
+            scriptProcessor.connect(audioContextRef.current!.destination);
+            setIsActive(true);
+          },
+          onmessage: async (msg) => {
+            // Handle output transcription (Architect's speech)
+            if (msg.serverContent?.outputTranscription) {
+              setTranscript(prev => [...prev, { role: 'Architect', text: msg.serverContent!.outputTranscription!.text }]);
+            }
+            // Handle input transcription (User's speech)
+            if (msg.serverContent?.inputTranscription) {
+              setTranscript(prev => [...prev, { role: 'User', text: msg.serverContent!.inputTranscription!.text }]);
+            }
+
+            const audioBase64 = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
+            if (audioBase64) {
+              const ctx = outputAudioContextRef.current!;
+              nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+              const buffer = await decodeAudioData(decode(audioBase64), ctx, 24000, 1);
+              const source = ctx.createBufferSource();
+              source.buffer = buffer;
+              source.connect(ctx.destination);
+              source.start(nextStartTimeRef.current);
+              nextStartTimeRef.current += buffer.duration;
+              sourcesRef.current.add(source);
+              source.onended = () => sourcesRef.current.delete(source);
+            }
+
+            if (msg.serverContent?.interrupted) {
+              sourcesRef.current.forEach(s => s.stop());
+              sourcesRef.current.clear();
+              nextStartTimeRef.current = 0;
+            }
+          },
+          onclose: () => {
+            setIsActive(false);
+          },
+          onerror: (e) => {
+            console.error("Live session error", e);
+            setIsActive(false);
+          }
         },
-        onmessage: async (msg) => {
-          if (msg.serverContent?.outputTranscription) {
-            setTranscript(prev => [...prev, { role: 'ai', text: msg.serverContent!.outputTranscription!.text }]);
-          }
-          const audioBase64 = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
-          if (audioBase64) {
-            const ctx = outputAudioContextRef.current!;
-            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
-            const buffer = await decodeAudioData(decode(audioBase64), ctx, 24000, 1);
-            const source = ctx.createBufferSource();
-            source.buffer = buffer;
-            source.connect(ctx.destination);
-            source.start(nextStartTimeRef.current);
-            nextStartTimeRef.current += buffer.duration;
-            sourcesRef.current.add(source);
-            source.onended = () => sourcesRef.current.delete(source);
-          }
-          if (msg.serverContent?.interrupted) {
-            sourcesRef.current.forEach(s => s.stop());
-            sourcesRef.current.clear();
-            nextStartTimeRef.current = 0;
-          }
-        },
-        onclose: () => setIsActive(false),
-        onerror: (e) => console.error("Live session error", e)
-      },
-      config: {
-        responseModalities: [Modality.AUDIO],
-        speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
-        systemInstruction: 'You are a real-time academic assistant. You help users refine their curricula through natural conversation. Speak concisely.',
-        outputAudioTranscription: {}
-      }
-    });
-    sessionRef.current = sessionPromise;
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Zephyr' } } },
+          systemInstruction: 'You are CurricuForge Voice Sync. You assist in real-time architectural curriculum design. Be concise, highly professional, and technical.',
+          outputAudioTranscription: {},
+          inputAudioTranscription: {}
+        }
+      });
+      sessionRef.current = sessionPromise;
+    } catch (err) {
+      console.error("Failed to access microphone", err);
+      alert("Microphone access is required for Voice Sync.");
+    }
   };
 
-  const stopSession = () => {
-    sessionRef.current?.then((s: any) => s.close());
+  const stopSession = async () => {
+    if (sessionRef.current) {
+      const session = await sessionRef.current;
+      session.close();
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
     setIsActive(false);
   };
 
+  // Auto-scroll terminal
+  const scrollRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    }
+  }, [transcript]);
+
   return (
-    <div className="bg-indigo-900 rounded-2xl shadow-2xl p-8 text-white">
-      <div className="flex flex-col md:flex-row items-center justify-between gap-8">
-        <div className="flex-1 space-y-4">
-          <h3 className="text-3xl font-black">Native Voice Sync</h3>
-          <p className="text-indigo-200">
-            Have a real-time, low-latency conversation with CurricuForge to brainstorm course ideas or module structures.
+    <div className="bg-[#263238] rounded-[2.5rem] shadow-2xl p-12 text-white overflow-hidden relative">
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#3F51B5] via-[#00E5FF] to-[#3F51B5]"></div>
+      
+      <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
+        <div className="flex-1 space-y-6">
+          <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full mb-2">
+            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#00E5FF] animate-pulse' : 'bg-slate-600'}`}></div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+              {isActive ? 'Link Established' : 'System Standby'}
+            </span>
+          </div>
+          <h3 className="text-5xl font-black tracking-tight">Native Voice Sync</h3>
+          <p className="text-slate-400 text-lg font-medium leading-relaxed max-w-xl">
+            Communicate directly with the CurricuForge cognitive engine. Your speech is transcribed in real-time for transparent design iteration.
           </p>
-          <div className="flex gap-4">
+          <div className="flex gap-6 pt-4">
             {!isActive ? (
               <button 
                 onClick={startSession}
-                className="bg-white text-indigo-900 px-6 py-3 rounded-xl font-bold hover:bg-indigo-50 transition-all flex items-center gap-2"
+                className="bg-white text-[#263238] px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#00E5FF] transition-all flex items-center gap-3 glow-button"
               >
-                <i className="fas fa-microphone"></i> Start Conversation
+                <i className="fas fa-microphone-lines text-lg"></i> Ingest Audio Stream
               </button>
             ) : (
               <button 
                 onClick={stopSession}
-                className="bg-red-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-red-600 transition-all flex items-center gap-2"
+                className="bg-red-500 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all flex items-center gap-3 shadow-xl shadow-red-500/20"
               >
-                <i className="fas fa-stop"></i> Stop Session
+                <i className="fas fa-power-off text-lg"></i> Terminate Link
               </button>
             )}
           </div>
         </div>
 
-        <div className="w-full md:w-64 aspect-square bg-indigo-800/50 rounded-full border-4 border-indigo-700/50 flex items-center justify-center relative overflow-hidden">
+        <div className="w-full md:w-80 aspect-square bg-white/5 rounded-[3rem] border-4 border-white/10 flex items-center justify-center relative group">
           {isActive && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 bg-indigo-400/20 rounded-full animate-ping"></div>
-              <div className="absolute w-40 h-40 bg-indigo-400/10 rounded-full animate-ping [animation-delay:0.5s]"></div>
+              <div className="w-48 h-48 bg-[#00E5FF]/20 rounded-full animate-ping"></div>
+              <div className="absolute w-56 h-56 bg-[#00E5FF]/10 rounded-full animate-ping [animation-delay:0.5s]"></div>
             </div>
           )}
-          <i className={`fas fa-brain text-5xl ${isActive ? 'text-white animate-pulse' : 'text-indigo-700'}`}></i>
+          <div className={`w-32 h-32 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-2xl ${isActive ? 'bg-[#3F51B5] scale-110' : 'bg-white/10'}`}>
+            <i className={`fas fa-brain text-5xl ${isActive ? 'text-white' : 'text-slate-700'}`}></i>
+          </div>
         </div>
       </div>
 
-      {isActive && transcript.length > 0 && (
-        <div className="mt-8 bg-black/20 rounded-xl p-4 h-32 overflow-y-auto">
-          {transcript.map((t, i) => (
-            <p key={i} className="text-sm text-indigo-100 mb-1">
-              <span className="font-bold uppercase text-[10px] opacity-50 mr-2">{t.role}:</span>
-              {t.text}
-            </p>
-          ))}
+      {(isActive || transcript.length > 0) && (
+        <div 
+          ref={scrollRef}
+          className="mt-12 bg-black/40 rounded-[2rem] p-8 h-64 overflow-y-auto border border-white/5 scroll-smooth custom-scrollbar"
+        >
+          <div className="space-y-4">
+            {transcript.length === 0 && isActive && (
+              <div className="text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse italic">
+                Awaiting voice input... Speak to begin architectural consultation.
+              </div>
+            )}
+            {transcript.map((t, i) => (
+              <div key={i} className="animate-in slide-in-from-left-4 duration-300">
+                <span className={`text-[10px] font-black uppercase tracking-widest mb-1 block opacity-60 ${t.role === 'User' ? 'text-white' : 'text-[#00E5FF]'}`}>
+                  {t.role}
+                </span>
+                <p className={`text-sm font-medium leading-relaxed ${t.role === 'User' ? 'text-slate-300' : 'text-slate-100'}`}>
+                  {t.text}
+                </p>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>

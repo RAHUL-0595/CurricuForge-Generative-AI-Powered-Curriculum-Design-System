@@ -22,62 +22,82 @@ export const CurriculumForm: React.FC<Props> = ({ onSubmit, isLoading }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-lg p-8 border border-slate-100">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-slate-700">Course Subject</label>
-          <input
-            type="text"
-            required
-            placeholder="e.g. Advanced Machine Learning"
-            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            value={params.subject}
-            onChange={(e) => setParams({ ...params, subject: e.target.value })}
-          />
+    <form onSubmit={handleSubmit} className="frosted-card rounded-[2.5rem] shadow-2xl shadow-indigo-500/5 p-10 border border-slate-100 transition-all">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="space-y-3">
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Architectural Domain</label>
+          <div className="relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3F51B5] transition-colors">
+              <i className="fas fa-book-open text-sm"></i>
+            </div>
+            <input
+              type="text"
+              required
+              placeholder="e.g. Advanced AI Safety Protocols"
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#3F51B5]/10 focus:border-[#3F51B5] outline-none transition-all font-semibold text-[#263238]"
+              value={params.subject}
+              onChange={(e) => setParams({ ...params, subject: e.target.value })}
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-slate-700">Educational Level</label>
-          <select
-            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all bg-white"
-            value={params.level}
-            onChange={(e) => setParams({ ...params, level: e.target.value as any })}
-          >
-            <option>Beginner</option>
-            <option>Intermediate</option>
-            <option>Advanced</option>
-            <option>Expert</option>
-          </select>
+        <div className="space-y-3">
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Target Proficiency</label>
+          <div className="relative group">
+             <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3F51B5] transition-colors pointer-events-none">
+              <i className="fas fa-signal text-sm"></i>
+            </div>
+            <select
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#3F51B5]/10 focus:border-[#3F51B5] outline-none transition-all font-semibold text-[#263238] appearance-none"
+              value={params.level}
+              onChange={(e) => setParams({ ...params, level: e.target.value as any })}
+            >
+              <option>Beginner</option>
+              <option>Intermediate</option>
+              <option>Advanced</option>
+              <option>Expert</option>
+            </select>
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-slate-700">Industry Alignment</label>
-          <input
-            type="text"
-            placeholder="e.g. Fintech, Healthcare IT"
-            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            value={params.industryAlignment}
-            onChange={(e) => setParams({ ...params, industryAlignment: e.target.value })}
-          />
+        <div className="space-y-3">
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Industry Vertical</label>
+           <div className="relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3F51B5] transition-colors">
+              <i className="fas fa-briefcase text-sm"></i>
+            </div>
+            <input
+              type="text"
+              placeholder="e.g. Aerospace Engineering"
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#3F51B5]/10 focus:border-[#3F51B5] outline-none transition-all font-semibold text-[#263238]"
+              value={params.industryAlignment}
+              onChange={(e) => setParams({ ...params, industryAlignment: e.target.value })}
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <label className="block text-sm font-semibold text-slate-700">Duration (Weeks)</label>
-          <input
-            type="number"
-            min="1"
-            max="52"
-            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            value={params.durationWeeks}
-            onChange={(e) => setParams({ ...params, durationWeeks: parseInt(e.target.value) })}
-          />
+        <div className="space-y-3">
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Temporal Duration (Weeks)</label>
+          <div className="relative group">
+            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#3F51B5] transition-colors">
+              <i className="fas fa-calendar-days text-sm"></i>
+            </div>
+            <input
+              type="number"
+              min="1"
+              max="52"
+              className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-[#3F51B5]/10 focus:border-[#3F51B5] outline-none transition-all font-semibold text-[#263238]"
+              value={params.durationWeeks}
+              onChange={(e) => setParams({ ...params, durationWeeks: parseInt(e.target.value) })}
+            />
+          </div>
         </div>
 
-        <div className="md:col-span-2 space-y-2">
-          <label className="block text-sm font-semibold text-slate-700">Additional Context / Requirements</label>
+        <div className="md:col-span-2 space-y-3">
+          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Structural Constraints & Context</label>
           <textarea
-            placeholder="Mention specific libraries, methodologies, or outcomes..."
-            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none transition-all h-24"
+            placeholder="Specify advanced technical requirements, pedagogical preferences, or regulatory standards..."
+            className="w-full px-6 py-4 bg-slate-50 border border-slate-100 rounded-[1.5rem] focus:bg-white focus:ring-2 focus:ring-[#3F51B5]/10 focus:border-[#3F51B5] outline-none transition-all font-semibold text-[#263238] h-32"
             value={params.additionalContext}
             onChange={(e) => setParams({ ...params, additionalContext: e.target.value })}
           />
@@ -87,19 +107,19 @@ export const CurriculumForm: React.FC<Props> = ({ onSubmit, isLoading }) => {
       <button
         type="submit"
         disabled={isLoading}
-        className={`mt-8 w-full py-4 rounded-xl text-white font-bold text-lg flex items-center justify-center gap-2 transition-all shadow-md active:scale-95 ${
-          isLoading ? 'bg-indigo-400 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-200 shadow-xl'
+        className={`mt-12 w-full py-5 rounded-2xl text-white font-black text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-3 transition-all glow-button shadow-xl ${
+          isLoading ? 'bg-indigo-300 cursor-not-allowed' : 'gradient-header hover:shadow-indigo-500/40 active:scale-95'
         }`}
       >
         {isLoading ? (
           <>
-            <i className="fas fa-spinner fa-spin"></i>
-            Designing Curriculum...
+            <i className="fas fa-cog fa-spin"></i>
+            Initiating Synthesis...
           </>
         ) : (
           <>
-            <i className="fas fa-wand-magic-sparkles"></i>
-            Forge Curriculum
+            <i className="fas fa-wand-sparkles"></i>
+            Forge Architecture
           </>
         )}
       </button>
