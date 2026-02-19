@@ -16,7 +16,8 @@ export const Chatbot: React.FC<ChatbotProps> = ({ embedded = false }) => {
   const chatRef = useRef<any>(null);
 
   useEffect(() => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Initializing GoogleGenAI with named parameter as required.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     chatRef.current = ai.chats.create({
       model: 'gemini-3-pro-preview',
       config: {

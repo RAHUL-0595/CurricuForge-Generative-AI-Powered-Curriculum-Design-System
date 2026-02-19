@@ -2,7 +2,8 @@
 import { GoogleGenAI, Type, Modality, GenerateContentResponse } from "@google/genai";
 import { Curriculum, GenerationParams } from "../types";
 
-const createAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+// Always use named parameter for apiKey and use process.env.API_KEY directly.
+const createAI = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const CURRICULUM_SCHEMA = {
   type: Type.OBJECT,
@@ -101,6 +102,7 @@ export const editImage = async (base64Image: string, prompt: string): Promise<st
     }
   });
 
+  // Iterating through all parts to find the image data.
   for (const part of response.candidates[0].content.parts) {
     if (part.inlineData) {
       return `data:image/png;base64,${part.inlineData.data}`;
@@ -130,7 +132,8 @@ export const generateSpeech = async (text: string): Promise<string> => {
 export const fastChat = async (message: string): Promise<string> => {
   const ai = createAI();
   const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-lite',
+    // Use gemini-flash-lite-latest for basic text tasks/flash-lite requests.
+    model: 'gemini-flash-lite-latest',
     contents: message,
   });
   return response.text || '';

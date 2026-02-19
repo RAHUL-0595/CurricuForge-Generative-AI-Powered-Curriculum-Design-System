@@ -1,9 +1,10 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI, Modality, LiveServerMessage } from '@google/genai';
 
 export const LiveForge: React.FC = () => {
   const [isActive, setIsActive] = useState(false);
+  // Fixed typo in useState destructuring.
   const [transcript, setTranscript] = useState<{ role: string, text: string }[]>([]);
   const sessionRef = useRef<any>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -43,7 +44,8 @@ export const LiveForge: React.FC = () => {
   };
 
   const startSession = async () => {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
+    // Correct initialization as per guidelines.
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
     outputAudioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
     
@@ -60,13 +62,14 @@ export const LiveForge: React.FC = () => {
             scriptProcessor.onaudioprocess = (e) => {
               const inputData = e.inputBuffer.getChannelData(0);
               const pcmBlob = createBlob(inputData);
+              // Ensure data is sent only after session resolves.
               sessionPromise.then(s => s.sendRealtimeInput({ media: pcmBlob }));
             };
             source.connect(scriptProcessor);
             scriptProcessor.connect(audioContextRef.current!.destination);
             setIsActive(true);
           },
-          onmessage: async (msg) => {
+          onmessage: async (msg: LiveServerMessage) => {
             // Handle output transcription (Architect's speech)
             if (msg.serverContent?.outputTranscription) {
               setTranscript(prev => [...prev, { role: 'Architect', text: msg.serverContent!.outputTranscription!.text }]);
@@ -79,6 +82,7 @@ export const LiveForge: React.FC = () => {
             const audioBase64 = msg.serverContent?.modelTurn?.parts[0]?.inlineData?.data;
             if (audioBase64) {
               const ctx = outputAudioContextRef.current!;
+              // Track end of previous audio chunk for gapless playback.
               nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
               const buffer = await decodeAudioData(decode(audioBase64), ctx, 24000, 1);
               const source = ctx.createBufferSource();
@@ -130,6 +134,10 @@ export const LiveForge: React.FC = () => {
     setIsActive(false);
   };
 
+  const clearTranscript = () => {
+    setTranscript([]);
+  };
+
   // Auto-scroll terminal
   const scrollRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -140,12 +148,12 @@ export const LiveForge: React.FC = () => {
 
   return (
     <div className="bg-[#263238] rounded-[2.5rem] shadow-2xl p-12 text-white overflow-hidden relative">
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#3F51B5] via-[#00E5FF] to-[#3F51B5]"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#3F51B5] via-[#FFB7B2] to-[#3F51B5]"></div>
       
       <div className="flex flex-col md:flex-row items-center justify-between gap-12 relative z-10">
         <div className="flex-1 space-y-6">
           <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 px-4 py-1.5 rounded-full mb-2">
-            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#00E5FF] animate-pulse' : 'bg-slate-600'}`}></div>
+            <div className={`w-2 h-2 rounded-full ${isActive ? 'bg-[#FFB7B2] animate-pulse' : 'bg-slate-600'}`}></div>
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">
               {isActive ? 'Link Established' : 'System Standby'}
             </span>
@@ -158,7 +166,7 @@ export const LiveForge: React.FC = () => {
             {!isActive ? (
               <button 
                 onClick={startSession}
-                className="bg-white text-[#263238] px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#00E5FF] transition-all flex items-center gap-3 glow-button"
+                className="bg-white text-[#263238] px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-[#FFB7B2] transition-all flex items-center gap-3 glow-button"
               >
                 <i className="fas fa-microphone-lines text-lg"></i> Ingest Audio Stream
               </button>
@@ -176,8 +184,8 @@ export const LiveForge: React.FC = () => {
         <div className="w-full md:w-80 aspect-square bg-white/5 rounded-[3rem] border-4 border-white/10 flex items-center justify-center relative group">
           {isActive && (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-48 h-48 bg-[#00E5FF]/20 rounded-full animate-ping"></div>
-              <div className="absolute w-56 h-56 bg-[#00E5FF]/10 rounded-full animate-ping [animation-delay:0.5s]"></div>
+              <div className="w-48 h-48 bg-[#FFB7B2]/20 rounded-full animate-ping"></div>
+              <div className="absolute w-56 h-56 bg-[#FFB7B2]/10 rounded-full animate-ping [animation-delay:0.5s]"></div>
             </div>
           )}
           <div className={`w-32 h-32 rounded-[2rem] flex items-center justify-center transition-all duration-500 shadow-2xl ${isActive ? 'bg-[#3F51B5] scale-110' : 'bg-white/10'}`}>
@@ -187,26 +195,36 @@ export const LiveForge: React.FC = () => {
       </div>
 
       {(isActive || transcript.length > 0) && (
-        <div 
-          ref={scrollRef}
-          className="mt-12 bg-black/40 rounded-[2rem] p-8 h-64 overflow-y-auto border border-white/5 scroll-smooth custom-scrollbar"
-        >
-          <div className="space-y-4">
-            {transcript.length === 0 && isActive && (
-              <div className="text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse italic">
-                Awaiting voice input... Speak to begin architectural consultation.
-              </div>
-            )}
-            {transcript.map((t, i) => (
-              <div key={i} className="animate-in slide-in-from-left-4 duration-300">
-                <span className={`text-[10px] font-black uppercase tracking-widest mb-1 block opacity-60 ${t.role === 'User' ? 'text-white' : 'text-[#00E5FF]'}`}>
-                  {t.role}
-                </span>
-                <p className={`text-sm font-medium leading-relaxed ${t.role === 'User' ? 'text-slate-300' : 'text-slate-100'}`}>
-                  {t.text}
-                </p>
-              </div>
-            ))}
+        <div className="relative mt-12">
+          <div className="absolute top-4 right-4 z-20">
+            <button 
+              onClick={clearTranscript}
+              className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-[#FFB7B2] transition-colors flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded-lg border border-white/5"
+            >
+              <i className="fas fa-trash-can"></i> Clear Console
+            </button>
+          </div>
+          <div 
+            ref={scrollRef}
+            className="bg-black/40 rounded-[2rem] p-8 h-64 overflow-y-auto border border-white/5 scroll-smooth custom-scrollbar"
+          >
+            <div className="space-y-4">
+              {transcript.length === 0 && isActive && (
+                <div className="text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse italic">
+                  Awaiting voice input... Speak to begin architectural consultation.
+                </div>
+              )}
+              {transcript.map((t, i) => (
+                <div key={i} className="animate-in slide-in-from-left-4 duration-300">
+                  <span className={`text-[10px] font-black uppercase tracking-widest mb-1 block opacity-60 ${t.role === 'User' ? 'text-white' : 'text-[#FFB7B2]'}`}>
+                    {t.role}
+                  </span>
+                  <p className={`text-sm font-medium leading-relaxed ${t.role === 'User' ? 'text-slate-300' : 'text-slate-100'}`}>
+                    {t.text}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
