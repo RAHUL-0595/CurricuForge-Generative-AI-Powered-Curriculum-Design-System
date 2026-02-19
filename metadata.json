@@ -1,0 +1,8 @@
+{
+  "name": "CurricuForge",
+  "description": "A generative AI-powered curriculum design system that automates the creation of structured courses, topic plans, and learning outcomes based on educational requirements.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
